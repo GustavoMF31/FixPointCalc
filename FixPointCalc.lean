@@ -7,16 +7,23 @@ import Mathlib.CategoryTheory.Endofunctor.Algebra
 open CategoryTheory
 open CategoryTheory.Endofunctor
 
--- TODO: Think about universes
-
 section
 
 variable {C : Type u} [Category.{v} C]
+variable {F : C ⥤ C}
+variable {μF : C} {ι : F.obj μF ⟶ μF}
 
 -- Think: Every endofunctor lifts to an endofunctor on its category of algebras
 -- Think: The category of F-algebras construction is functorial
 
-def str_inv (F : C ⥤ C) (A : Algebra F) (h : Limits.IsInitial A) :
+def cata {a : C} (h : Limits.IsInitial (Algebra.mk μF ι)) (f : F.obj a ⟶ a) : μF ⟶ a :=
+    (h.to ⟨a, f⟩).f
+
+lemma cata_comm (h : Limits.IsInitial (Algebra.mk μF ι)) (f : F.obj a ⟶ a) :
+      F.map (cata h f) ≫ f = ι ≫ cata h f := (h.to _).h
+
+-- cata h (F.map ι) ≫ ι = 𝟙 μF := by
+lemma str_inv (F : C ⥤ C) (A : Algebra F) (h : Limits.IsInitial A) :
   (h.to { a := F.obj A.a, str := F.map A.str }).f ≫ A.str = 𝟙 A.a := by
       let alg_id : A ⟶ A := ⟨𝟙 A.a, by cat_disch⟩
       let alg_hom : A ⟶ A
