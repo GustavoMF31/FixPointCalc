@@ -13,6 +13,8 @@ section
 variable {C : Type u} [Category.{v} C]
 variable {F : C ⥤ C}
 variable {μF : C} {ι : F.obj μF ⟶ μF}
+
+-- TODO: Rename this h to a more reasonable letter
 variable (h : Limits.IsInitial (Algebra.mk μF ι))
 
 -- Think: Every endofunctor lifts to an endofunctor on its category of algebras
@@ -28,43 +30,40 @@ lemma cata_unique (h : Limits.IsInitial (Algebra.mk μF ι))
   (h₁ : F.map g₁ ≫ f = ι ≫ g₁) (h₂ : F.map g₂ ≫ f = ι ≫ g₂) : g₁ = g₂ :=
   congr_arg Algebra.Hom.f (Limits.IsInitial.hom_ext (Y := ⟨a, f⟩) h ⟨g₁, h₁⟩ ⟨g₂, h₂⟩)
 
+lemma cata_ext (f : F.obj a ⟶ a) (h₁ : F.map g ≫ f = ι ≫ g) : g = cata h f :=
+    cata_unique h f _ _ h₁ (cata_comm h f)
+
 lemma cata_ump (g : μF ⟶ a) (f : F.obj a ⟶ a) :
     g = cata h f ↔ F.map g ≫ f = ι ≫ g := by
       constructor
       · intro h₁; subst h₁
         apply cata_comm
       intro h₁
-      apply cata_unique h
-      · exact h₁
-      · apply cata_comm
+      apply cata_ext
+      exact h₁
+
+lemma cata_fusion (f : F.obj a ⟶ a) (g : a ⟶ b) (l : F.obj b ⟶ b)
+    (h₁ : f ≫ g = F.map g ≫ l) : cata h f ≫ g = cata h l := by
+      apply cata_ext
+      rw [← Category.assoc ι, ← cata_comm, Functor.map_comp]
+      rw [Category.assoc, ← h₁, ← Category.assoc]
+
+lemma cata_iota_id : cata h ι = 𝟙 μF := by
+  apply symm; apply cata_ext; cat_disch
 
 -- cata h (F.map ι) ≫ ι = 𝟙 μF := by
-lemma str_inv (F : C ⥤ C) (A : Algebra F) (h : Limits.IsInitial A) :
-  (h.to { a := F.obj A.a, str := F.map A.str }).f ≫ A.str = 𝟙 A.a := by
-      let alg_id : A ⟶ A := ⟨𝟙 A.a, by cat_disch⟩
-      let alg_hom : A ⟶ A
-        := ⟨(h.to { a := F.obj A.a, str := F.map A.str }).f ≫ A.str,
-        by
-          rw [← Category.assoc]
-          rw [← ((h.to { a := F.obj A.a, str := F.map A.str }).h)]
-          cat_disch
-      ⟩
-      change alg_hom.f = alg_id.f
-      rw [← Endofunctor.Algebra.Hom.ext_iff]
-      apply Limits.IsInitial.hom_ext h
+lemma iota_inv : cata h (F.map ι) ≫ ι = 𝟙 μF := by
+  rw [← cata_iota_id h]
+  apply cata_fusion
+  rfl
 
--- F muF = muF
-def lambek (F : C ⥤ C) (A : Algebra F) (h : Limits.IsInitial A) :
-  F.obj A.a ≅ A.a where
-    hom := A.str
-    inv := (h.to ⟨F.obj A.a , F.map A.str⟩).f
-    hom_inv_id := by
-      rw [← (h.to ⟨F.obj A.a , F.map A.str⟩).h]
-      simp only
-      rw [← F.map_id, ← F.map_comp]
-      apply congr_arg
-      apply str_inv
-
-    inv_hom_id := by apply str_inv
+def lambek : F.obj μF ≅ μF where
+  hom := ι
+  inv := cata h (F.map ι)
+  inv_hom_id := iota_inv h
+  hom_inv_id := by
+    rw [← cata_comm, ← F.map_id, ← Functor.map_comp]
+    apply congr_arg
+    apply iota_inv h
 
 end
