@@ -70,7 +70,6 @@ end Catamorphism
 -- TODO: Consider wrapping IsInitial to avoid Algebra and Algebra.mk
 def rolling_rule
   (F : D ⥤ C) (G : C ⥤ D)
-  -- {μFG : D} {ι₁ : (F ⋙ G).obj μFG ⟶ μFG}
   {μFG : D} {ι₁ : G.obj (F.obj μFG) ⟶ μFG}
   (h₁ : IsInitial (C := Algebra (F ⋙ G)) (Algebra.mk (F := F ⋙ G) μFG ι₁))
   : IsInitial (C := Algebra (G ⋙ F)) (Algebra.mk (F := G ⋙ F) (F.obj μFG) (F.map ι₁))
@@ -111,4 +110,24 @@ def rolling_rule
         apply iso.inv_hom_id
         ⟩
 
-      sorry
+      rw [← cancel_epi (F.map ι₁)]
+      clear i
+      rw [← alg_comm, ← Category.assoc]
+
+      apply eq_whisker
+      rw [← F.map_comp]
+      apply congr_arg
+      apply Eq.symm
+      erw [← Iso.eq_inv_comp iso]
+      change cata h₁ (G.map f) =
+        cata h₁ _ ≫ G.map g
+      simp
+      apply Eq.symm
+      apply cata_fusion
+      simp
+      conv =>
+        rhs
+        rw [← G.map_comp]
+      rw [alg_comm]
+      rw [G.map_comp]
+
