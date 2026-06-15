@@ -85,36 +85,15 @@ def rolling_rule
     apply IsInitial.ofUniqueHom (fun ⟨a, f⟩ ↦
         Algebra.Hom.mk ((F.map (cata h₁ (G.map f))) ≫ f))
     intro ⟨a, f⟩ ⟨g, alg_comm⟩
-    dsimp at f g alg_comm
-    dsimp
+    simp only [Functor.comp_map] at alg_comm
     apply Algebra.Hom.ext
-    dsimp
-    let iso := lambek h₁
-    dsimp at iso
-    -- Use cancel_iso_hom_right or cancel_iso_hom_left
-    -- instead of this local class
-    letI i : IsSplitEpi (F.map ι₁) := ⟨F.map iso.inv, by
-      rw [← F.map_id, ← F.map_comp]
-      apply congr_arg
-      apply iso.inv_hom_id
-      ⟩
-    rw [← cancel_epi (F.map ι₁)]
-    clear i
+    rw [← Iso.cancel_iso_hom_left (F.mapIso (lambek h₁))]
+    unfold lambek
+    simp only [Functor.comp_obj, Functor.comp_map, Functor.mapIso_hom]
     rw [← alg_comm, ← Category.assoc]
     apply eq_whisker
     rw [← F.map_comp]
     apply congr_arg
-    apply Eq.symm
-    erw [← Iso.eq_inv_comp iso]
-    change cata h₁ (G.map f) =
-      cata h₁ _ ≫ G.map g
-    dsimp
-    apply Eq.symm
+    erw [← Iso.inv_comp_eq (lambek h₁)]
     apply cata_fusion
-    dsimp
-    conv =>
-      rhs
-      rw [← G.map_comp]
-    rw [alg_comm]
-    rw [G.map_comp]
-
+    simp [← Functor.map_comp, alg_comm]
