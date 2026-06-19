@@ -83,7 +83,6 @@ def lambek : F.obj μF ≅ μF where
 -- Every endofunctor extends to an endofunctor on its category of algebras
 -- TODO: This construction is really the (contravariant?) functorial action of
 -- Algebra : Cat^op -> Cat
-
 def map_alg (F : C ⥤ C) : Algebra F ⥤ Algebra F where
   obj alg := ⟨F.obj alg.a, F.map alg.str⟩
   map alg_hom := Algebra.Hom.mk (F.map alg_hom.f) (by
@@ -91,7 +90,7 @@ def map_alg (F : C ⥤ C) : Algebra F ⥤ Algebra F where
     aesop_cat
   )
 
--- Lemma 19.17: Every f algebra induces a corresponding F algebra morphism
+-- Lemma 19.17: Every F-algebra induces a corresponding F-algebra morphism
 def asMorphism (f : Algebra F) : (map_alg F).obj f ⟶ f := Algebra.Hom.mk f.str
 
 def Sq : Algebra F ⥤ Algebra (F ⋙ F) where
