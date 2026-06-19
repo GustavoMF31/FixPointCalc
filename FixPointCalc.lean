@@ -80,6 +80,28 @@ def lambek : F.obj μF ≅ μF where
     apply congr_arg
     apply iota_inv h
 
+-- Every endofunctor extends to an endofunctor on its category of algebras
+-- TODO: This construction is really the (contravariant?) functorial action of
+-- Algebra : Cat^op -> Cat
+
+def map_alg (F : C ⥤ C) : Algebra F ⥤ Algebra F where
+  obj alg := ⟨F.obj alg.a, F.map alg.str⟩
+  map alg_hom := Algebra.Hom.mk (F.map alg_hom.f) (by
+    simp only [← F.map_comp]
+    aesop_cat
+  )
+
+-- Lemma 19.17: Every f algebra induces a corresponding F algebra morphism
+def asMorphism (f : Algebra F) : (map_alg F).obj f ⟶ f := Algebra.Hom.mk f.str
+
+def Sq : Algebra F ⥤ Algebra (F ⋙ F) where
+  obj alg := Algebra.mk alg.a (F.map alg.str ≫ alg.str)
+  map alg_hom := Algebra.Hom.mk alg_hom.f (by
+    simp only [Functor.comp_obj, Functor.comp_map, Category.assoc]
+    rw [← alg_hom.h, ← Category.assoc, ← F.map_comp, ← Category.assoc]
+    simp
+  )
+
 end Catamorphism
 
 set_option backward.isDefEq.respectTransparency false in
@@ -120,6 +142,7 @@ def square_rule
   {μFF : C} {ι : (F ⋙ F).obj μFF ⟶ μFF}
   (h : InitialAlgebra (F ⋙ F) ι)
   : InitialAlgebra F (F.map (cata h (F.map ι)) ≫ ι) := by
+
   apply IsInitial.ofUniqueHom (fun ⟨_, f⟩ =>
     Algebra.Hom.mk (cata h (F.map f ≫ f)) (by 
       simp only [Functor.comp_obj, Category.assoc, cata_comm, Functor.comp_map]
@@ -142,6 +165,4 @@ def square_rule
   rw [← Category.assoc, ← F.map_comp, alg_comm]
   simp
   sorry
-    
 
-  )
