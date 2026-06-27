@@ -69,17 +69,6 @@ lemma iota_inv : cata h (F.map ι) ≫ ι = 𝟙 μF := by
   apply cata_fusion
   rfl
 
--- TODO: Show that F ι is also initial in the category of algebras,
--- and get an isomorphism from there. Then simplify it to the one below.
-def lambek : F.obj μF ≅ μF where
-  hom := ι
-  inv := cata h (F.map ι)
-  inv_hom_id := iota_inv h
-  hom_inv_id := by
-    rw [cata_comm, ← F.map_id, ← Functor.map_comp]
-    apply congr_arg
-    apply iota_inv h
-
 -- Every endofunctor extends to an endofunctor on its category of algebras
 -- TODO: This construction is really the (contravariant?) functorial action of
 -- Algebra : Cat^op -> Cat
@@ -92,6 +81,29 @@ def map_alg (F : C ⥤ C) : Algebra F ⥤ Algebra F where
 
 -- Lemma 19.17: Every F-algebra induces a corresponding F-algebra morphism
 def asMorphism (f : Algebra F) : (map_alg F).obj f ⟶ f := Algebra.Hom.mk f.str
+
+@[simp]
+def carrier : Algebra F ⥤ C where
+  obj alg := alg.a
+  map g := g.f
+
+def lambek_alg {alg : Algebra F} (h : IsInitial alg)
+  : (map_alg F).obj alg ≅ alg where
+  hom := asMorphism alg
+  inv := h.to ((map_alg F).obj alg)
+  inv_hom_id := by
+    apply Algebra.ext
+    apply iota_inv h
+  hom_inv_id := by
+    apply Algebra.ext
+    unfold asMorphism autoParam map_alg
+    simp only [Algebra.comp_f, Algebra.id_f]
+    rw [← cata]
+    rw [cata_comm, ← F.map_id, ← Functor.map_comp]
+    apply congr_arg
+    apply iota_inv h
+
+def lambek : F.obj μF ≅ μF := carrier.mapIso (lambek_alg h)
 
 def Sq : Algebra F ⥤ Algebra (F ⋙ F) where
   obj alg := Algebra.mk alg.a (F.map alg.str ≫ alg.str)
@@ -116,8 +128,7 @@ def rolling_rule
     simp only [Functor.comp_map] at alg_comm
     apply Algebra.Hom.ext
     rw [← Iso.cancel_iso_hom_left (F.mapIso (lambek h₁))]
-    unfold lambek
-    simp only [Functor.comp_obj, Functor.comp_map, Functor.mapIso_hom]
+    simp only [Functor.comp_obj, lambek, carrier, lambek_alg, asMorphism, Functor.mapIso_hom]
     rw [← alg_comm, ← Category.assoc]
     apply eq_whisker
     rw [← F.map_comp]
@@ -163,5 +174,5 @@ def square_rule
   simp at g
   rw [← Category.assoc, ← F.map_comp, alg_comm]
   simp
-  sorry
 
+  sorry
